@@ -4,7 +4,7 @@ define how many times a day you want to complete it. Get a daily todo list. Take
 
 ## Installation
 
-From releases, download the appropriate binary for your system, and rename to atomify
+From [releases](https://github.com/rtscowen/atomify/releases), download the appropriate binary for your system, and rename to atomify
 
 ## Usage
 
