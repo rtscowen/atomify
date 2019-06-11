@@ -1,10 +1,12 @@
 # atomify
-A minimalist habit tracker, based on the principles of "Atomic Habits" by James Clear. For every habit you create, 
+A minimalist command line habit tracker, based on the principles of "Atomic Habits" by James Clear. For every habit you create, 
 define how many times a day you want to complete it. Get a daily todo list. Take break days. 
 
 ## Installation
 
 From [releases](https://github.com/rtscowen/atomify/releases), download the appropriate binary for your system, and rename to atomify
+
+Habits are stored in a json file. The setup I use is to place atomify in a habits directory on Google Drive, add the executable to system path, then use from command line anywhere and habits are always backed up on Drive.
 
 ## Usage
 
