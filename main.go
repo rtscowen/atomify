@@ -1,59 +1,425 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
+	"text/tabwriter"
 	"time"
 )
 
+const store = "habits.json"
+
 type habit struct {
-	name       string
-	created    time.Time
-	dailyAtoms int
-	totalAtoms int
-	breaks     []time.Time
+	Name       string
+	Created    time.Time
+	DailyAtoms int
+	TotalAtoms int
+	Breaks     []time.Time
 }
 
-func (h *habit) create() {
-	fmt.Println(h)
-}
+func (h *habit) create(f *os.File) {
 
-func (h *habit) updateName(newName string) {
-	fmt.Println(h)
-}
+	data, err := json.Marshal(h)
+	if err != nil {
+		panic(err)
+	}
 
-func (h *habit) updateDaily(newDaily int) {
-	fmt.Println(h)
-}
+	if _, err := f.Seek(0, 2); err != nil {
+		panic(err)
+	}
 
-func (h *habit) delete() {
-	fmt.Println(h)
-}
-
-func (h *habit) increment() {
-	fmt.Println(h)
-}
-
-func (h *habit) decrement() {
-	fmt.Println(h)
-}
-
-func (h *habit) takeBreak() {
-	fmt.Println(h)
-}
-
-func (h *habit) unbreak() {
-	fmt.Println(h)
-}
-
-func list() {
+	if _, err := f.Write(append(data, byte('\n'))); err != nil {
+		panic(err)
+	}
 
 }
 
-func day() {
+func (h *habit) updateName(f *os.File, newName string) {
+	var temp habit
+	var habits []habit
 
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err := json.Unmarshal(scanner.Bytes(), &temp); err != nil {
+			panic(err)
+		}
+
+		if h.Name == temp.Name {
+			temp.Name = newName
+			habits = append(habits, temp)
+		} else {
+			habits = append(habits, temp)
+		}
+
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+
+	if err := f.Truncate(0); err != nil {
+		panic(err)
+	}
+
+	if _, err := f.Seek(0, 0); err != nil {
+		panic(err)
+	}
+
+	for _, habit := range habits {
+		data, err := json.Marshal(habit)
+		if err != nil {
+			panic(err)
+		}
+
+		data = append(data, byte('\n'))
+		if _, err := f.Write(data); err != nil {
+			panic(err)
+		}
+	}
+
+	h.Name = newName
+}
+
+func (h *habit) updateDaily(f *os.File, newDaily int) {
+	var temp habit
+	var habits []habit
+
+	//Ensure we are at start of file in case name is updated prior
+	f.Seek(0, 0)
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err := json.Unmarshal(scanner.Bytes(), &temp); err != nil {
+			panic(err)
+		}
+
+		if h.Name == temp.Name {
+			temp.DailyAtoms = newDaily
+
+			//Reset total and created: a new daily target is effectively a new habit
+			temp.TotalAtoms = 0
+			temp.Created = time.Now()
+			habits = append(habits, temp)
+		} else {
+			habits = append(habits, temp)
+		}
+
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+
+	if err := f.Truncate(0); err != nil {
+		panic(err)
+	}
+
+	if _, err := f.Seek(0, 0); err != nil {
+		panic(err)
+	}
+
+	for _, habit := range habits {
+		data, err := json.Marshal(habit)
+		if err != nil {
+			panic(err)
+		}
+
+		data = append(data, byte('\n'))
+		if _, err := f.Write(data); err != nil {
+			panic(err)
+		}
+	}
+
+}
+
+func (h *habit) delete(f *os.File) {
+	var temp habit
+	var habits []habit
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err := json.Unmarshal(scanner.Bytes(), &temp); err != nil {
+			panic(err)
+		}
+
+		if h.Name != temp.Name {
+			habits = append(habits, temp)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+
+	if err := f.Truncate(0); err != nil {
+		panic(err)
+	}
+
+	if _, err := f.Seek(0, 0); err != nil {
+		panic(err)
+	}
+
+	if habits != nil {
+
+		for _, habit := range habits {
+			data, err := json.Marshal(habit)
+			if err != nil {
+				panic(err)
+			}
+
+			data = append(data, byte('\n'))
+			if _, err := f.Write(data); err != nil {
+				panic(err)
+			}
+		}
+
+	}
+
+}
+
+func (h *habit) increment(f *os.File) {
+	var temp habit
+	var habits []habit
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err := json.Unmarshal(scanner.Bytes(), &temp); err != nil {
+			panic(err)
+		}
+
+		if h.Name == temp.Name {
+			temp.TotalAtoms++
+			habits = append(habits, temp)
+		} else {
+			habits = append(habits, temp)
+		}
+
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+
+	if err := f.Truncate(0); err != nil {
+		panic(err)
+	}
+
+	if _, err := f.Seek(0, 0); err != nil {
+		panic(err)
+	}
+
+	for _, habit := range habits {
+		data, err := json.Marshal(habit)
+		if err != nil {
+			panic(err)
+		}
+
+		data = append(data, byte('\n'))
+		if _, err := f.Write(data); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (h *habit) decrement(f *os.File) {
+	var temp habit
+	var habits []habit
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err := json.Unmarshal(scanner.Bytes(), &temp); err != nil {
+			panic(err)
+		}
+
+		if h.Name == temp.Name {
+			temp.TotalAtoms--
+			habits = append(habits, temp)
+		} else {
+			habits = append(habits, temp)
+		}
+
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+
+	if err := f.Truncate(0); err != nil {
+		panic(err)
+	}
+
+	if _, err := f.Seek(0, 0); err != nil {
+		panic(err)
+	}
+
+	for _, habit := range habits {
+		data, err := json.Marshal(habit)
+		if err != nil {
+			panic(err)
+		}
+
+		data = append(data, byte('\n'))
+		if _, err := f.Write(data); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (h *habit) takeBreak(f *os.File) {
+	var temp habit
+	var habits []habit
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err := json.Unmarshal(scanner.Bytes(), &temp); err != nil {
+			panic(err)
+		}
+
+		if h.Name == temp.Name {
+			temp.Breaks = append(temp.Breaks, time.Now())
+			habits = append(habits, temp)
+		} else {
+			habits = append(habits, temp)
+		}
+
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+
+	if err := f.Truncate(0); err != nil {
+		panic(err)
+	}
+
+	if _, err := f.Seek(0, 0); err != nil {
+		panic(err)
+	}
+
+	for _, habit := range habits {
+		data, err := json.Marshal(habit)
+		if err != nil {
+			panic(err)
+		}
+
+		data = append(data, byte('\n'))
+		if _, err := f.Write(data); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (h *habit) unbreak(f *os.File) {
+	var temp habit
+	var habits []habit
+
+	today := time.Now()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err := json.Unmarshal(scanner.Bytes(), &temp); err != nil {
+			panic(err)
+		}
+
+		if h.Name == temp.Name {
+			var newBreaks []time.Time
+			for _, b := range temp.Breaks {
+				if today.Day() != b.Day() && today.Month() != b.Month() && today.Year() != b.Year() {
+					newBreaks = append(newBreaks, b)
+				}
+			}
+			temp.Breaks = newBreaks
+			habits = append(habits, temp)
+		} else {
+			habits = append(habits, temp)
+		}
+
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+
+	if err := f.Truncate(0); err != nil {
+		panic(err)
+	}
+
+	if _, err := f.Seek(0, 0); err != nil {
+		panic(err)
+	}
+
+	for _, habit := range habits {
+		data, err := json.Marshal(habit)
+		if err != nil {
+			panic(err)
+		}
+
+		data = append(data, byte('\n'))
+		if _, err := f.Write(data); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func list(f *os.File) {
+	var temp habit
+	var strs []string
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', tabwriter.AlignRight)
+
+	fmt.Fprintf(w, "Name:\tCreated:\tDaily Requirement:\tTotal completed:\t\n")
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err := json.Unmarshal(scanner.Bytes(), &temp); err != nil {
+			panic(err)
+		}
+
+		strs = append(strs, temp.Name)
+		strs = append(strs, temp.Created.Format("02-Jan-2006"))
+		strs = append(strs, strconv.Itoa(temp.DailyAtoms))
+		strs = append(strs, strconv.Itoa(temp.TotalAtoms))
+		strs = append(strs, "\n")
+
+		fmt.Fprintf(w, strings.Join(strs, "\t"))
+
+	}
+
+	if err := w.Flush(); err != nil {
+		panic(err)
+	}
+}
+
+func day(f *os.File) {
+	var temp habit
+
+	fmt.Println("Todo list: ")
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err := json.Unmarshal(scanner.Bytes(), &temp); err != nil {
+			panic(err)
+		}
+
+		deltaNowCreated := time.Now().Sub(temp.Created)
+		daysBetween := int(deltaNowCreated.Hours() / 24)
+
+		if daysBetween == 0 {
+			daysBetween = 1
+		}
+
+		expectedAtoms := temp.DailyAtoms * daysBetween
+
+		if temp.TotalAtoms != expectedAtoms {
+			fmt.Println("[+] ", temp.Name, " x ", expectedAtoms-temp.TotalAtoms)
+		}
+
+	}
 }
 
 func main() {
@@ -65,12 +431,22 @@ func main() {
 		return
 	}
 
+	f, err := os.OpenFile(store, os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
 	//Handle flags for the "update" subcommand
 	var newName string
 	var newDaily int
 
 	updateCommand := flag.NewFlagSet("update", flag.ExitOnError)
-
 	updateCommand.StringVar(&newName, "r", "", "New name for habit")
 	updateCommand.IntVar(&newDaily, "d", 0, "New number of daily atoms")
 
@@ -78,96 +454,109 @@ func main() {
 
 	case "new":
 		if len(os.Args) != 4 {
-			fmt.Println("new takes two args [name] [units per day]")
+			fmt.Println("new takes two args [Name] [units per day]")
+			return
 		}
 
 		dailyAtoms, err := strconv.Atoi(os.Args[3])
 		if err != nil {
-			os.Exit(2)
+			panic(err)
 		}
 
 		h := habit{os.Args[2], time.Now(), dailyAtoms, 0, nil}
-		h.create()
+		h.create(f)
 
 	case "remove":
 		if len(os.Args) != 3 {
-			fmt.Println("remove takes one arg [name]")
+			fmt.Println("remove takes one arg [Name]")
+			return
 		}
 
-		h := habit{name: os.Args[2]}
+		h := habit{Name: os.Args[2]}
 
-		h.delete()
+		h.delete(f)
 
 	case "list":
 		if len(os.Args) != 2 {
 			fmt.Println("list takes no arguemnts")
+			return
 		}
 
-		list()
+		list(f)
 
 	case "day":
 		if len(os.Args) != 2 {
 			fmt.Println("day takes no arguemnts")
+			return
 		}
 
-		day()
+		day(f)
 
 	case "++":
 		if len(os.Args) != 3 {
 			fmt.Println("++ takes one arg [habit]")
+			return
 		}
 
-		h := habit{name: os.Args[2]}
-		h.increment()
+		h := habit{Name: os.Args[2]}
+		h.increment(f)
 
 	case "--":
 		if len(os.Args) != 3 {
 			fmt.Println("-- takes one arg [habit]")
+			return
 		}
 
-		h := habit{name: os.Args[2]}
-		h.decrement()
+		h := habit{Name: os.Args[2]}
+		h.decrement(f)
 
 	case "break":
 		if len(os.Args) != 3 {
 			fmt.Println("break takes one arg [habit]")
+			return
 		}
 
-		h := habit{name: os.Args[2]}
-		h.takeBreak()
+		h := habit{Name: os.Args[2]}
+		h.takeBreak(f)
 
 		fmt.Println("Everybody needs a break")
 
 	case "unbreak":
 		if len(os.Args) != 3 {
 			fmt.Println("unbreak takes one arg [habit]")
+			return
 		}
 
-		h := habit{name: os.Args[2]}
-		h.unbreak()
+		h := habit{Name: os.Args[2]}
+		h.unbreak(f)
 
 	case "update":
-		updateCommand.Parse(os.Args[2:])
+		updateCommand.Parse(os.Args[3:])
 
 	default:
 		fmt.Printf("%q is not a valid command\n", os.Args[1])
-		os.Exit(2)
+		return
 	}
 
 	if updateCommand.Parsed() {
 		if len(os.Args) < 4 || len(os.Args) > 5 {
 			fmt.Println("atomify update [habit] -r=[new name] -d=[new daily]")
 			fmt.Println("At least one of the flags is required")
+			return
 		}
 
-		h := habit{name: os.Args[3]}
+		h := habit{Name: os.Args[2]}
+
+		fmt.Println(h.Name)
 
 		if newName != "" {
-			h.updateName(newName)
+			h.updateName(f, newName)
 		}
 
+		fmt.Println(h.Name)
+
 		if newDaily != 0 {
-			h.updateDaily(newDaily)
+			h.updateDaily(f, newDaily)
 		}
 
 		fmt.Println("Habit updated")
