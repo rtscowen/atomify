@@ -314,12 +314,7 @@ func day(f *os.File) {
 }
 
 func (h *habit) printTodo() {
-	deltaNowCreated := time.Now().Sub(h.Created)
-	daysBetween := int(deltaNowCreated.Hours() / 24)
-
-	if daysBetween == 0 {
-		daysBetween = 1
-	}
+	daysBetween := (time.Now().Day() - h.Created.Day()) + 1
 
 	expectedAtoms := h.DailyAtoms * daysBetween
 
