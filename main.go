@@ -262,7 +262,6 @@ func (h *habit) unbreak(f *os.File) {
 
 func list(f *os.File) {
 	var temp habit
-	var strs []string
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', tabwriter.AlignRight)
 
@@ -273,6 +272,8 @@ func list(f *os.File) {
 		if err := json.Unmarshal(scanner.Bytes(), &temp); err != nil {
 			panic(err)
 		}
+
+		var strs []string
 
 		strs = append(strs, temp.Name)
 		strs = append(strs, temp.Created.Format("02-Jan-2006"))
