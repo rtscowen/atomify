@@ -8,6 +8,12 @@ From [releases](https://github.com/rtscowen/atomify/releases), download the appr
 
 Habits are stored in a json file. The setup I use is to place atomify in a habits directory on Google Drive, add the executable to system path, then use from command line anywhere and habits are always backed up on Drive.
 
+If you're a Gopher: 
+
+```
+go get github.com/rtscowen/atomify
+```
+
 ## Usage
 
 ```
