@@ -22,8 +22,31 @@ type habit struct {
 	Breaks     []time.Time
 }
 
-func (h *habit) create(f *os.File) {
+func eraseAndWrite(f *os.File, h *[]habit) {
+	if err := f.Truncate(0); err != nil {
+		panic(err)
+	}
 
+	if _, err := f.Seek(0, 0); err != nil {
+		panic(err)
+	}
+
+	if *h != nil {
+		for _, habit := range *h {
+			data, err := json.Marshal(habit)
+			if err != nil {
+				panic(err)
+			}
+
+			data = append(data, byte('\n'))
+			if _, err := f.Write(data); err != nil {
+				panic(err)
+			}
+		}
+	}
+}
+
+func (h *habit) create(f *os.File) {
 	data, err := json.Marshal(h)
 	if err != nil {
 		panic(err)
@@ -36,7 +59,6 @@ func (h *habit) create(f *os.File) {
 	if _, err := f.Write(append(data, byte('\n'))); err != nil {
 		panic(err)
 	}
-
 }
 
 func (h *habit) updateName(f *os.File, newName string) {
@@ -62,25 +84,7 @@ func (h *habit) updateName(f *os.File, newName string) {
 		panic(err)
 	}
 
-	if err := f.Truncate(0); err != nil {
-		panic(err)
-	}
-
-	if _, err := f.Seek(0, 0); err != nil {
-		panic(err)
-	}
-
-	for _, habit := range habits {
-		data, err := json.Marshal(habit)
-		if err != nil {
-			panic(err)
-		}
-
-		data = append(data, byte('\n'))
-		if _, err := f.Write(data); err != nil {
-			panic(err)
-		}
-	}
+	eraseAndWrite(f, &habits)
 
 	h.Name = newName
 }
@@ -115,25 +119,7 @@ func (h *habit) updateDaily(f *os.File, newDaily int) {
 		panic(err)
 	}
 
-	if err := f.Truncate(0); err != nil {
-		panic(err)
-	}
-
-	if _, err := f.Seek(0, 0); err != nil {
-		panic(err)
-	}
-
-	for _, habit := range habits {
-		data, err := json.Marshal(habit)
-		if err != nil {
-			panic(err)
-		}
-
-		data = append(data, byte('\n'))
-		if _, err := f.Write(data); err != nil {
-			panic(err)
-		}
-	}
+	eraseAndWrite(f, &habits)
 
 }
 
@@ -156,29 +142,7 @@ func (h *habit) delete(f *os.File) {
 		panic(err)
 	}
 
-	if err := f.Truncate(0); err != nil {
-		panic(err)
-	}
-
-	if _, err := f.Seek(0, 0); err != nil {
-		panic(err)
-	}
-
-	if habits != nil {
-
-		for _, habit := range habits {
-			data, err := json.Marshal(habit)
-			if err != nil {
-				panic(err)
-			}
-
-			data = append(data, byte('\n'))
-			if _, err := f.Write(data); err != nil {
-				panic(err)
-			}
-		}
-
-	}
+	eraseAndWrite(f, &habits)
 
 }
 
@@ -205,25 +169,7 @@ func (h *habit) increment(f *os.File) {
 		panic(err)
 	}
 
-	if err := f.Truncate(0); err != nil {
-		panic(err)
-	}
-
-	if _, err := f.Seek(0, 0); err != nil {
-		panic(err)
-	}
-
-	for _, habit := range habits {
-		data, err := json.Marshal(habit)
-		if err != nil {
-			panic(err)
-		}
-
-		data = append(data, byte('\n'))
-		if _, err := f.Write(data); err != nil {
-			panic(err)
-		}
-	}
+	eraseAndWrite(f, &habits)
 }
 
 func (h *habit) decrement(f *os.File) {
@@ -249,25 +195,7 @@ func (h *habit) decrement(f *os.File) {
 		panic(err)
 	}
 
-	if err := f.Truncate(0); err != nil {
-		panic(err)
-	}
-
-	if _, err := f.Seek(0, 0); err != nil {
-		panic(err)
-	}
-
-	for _, habit := range habits {
-		data, err := json.Marshal(habit)
-		if err != nil {
-			panic(err)
-		}
-
-		data = append(data, byte('\n'))
-		if _, err := f.Write(data); err != nil {
-			panic(err)
-		}
-	}
+	eraseAndWrite(f, &habits)
 }
 
 func (h *habit) takeBreak(f *os.File) {
@@ -293,25 +221,7 @@ func (h *habit) takeBreak(f *os.File) {
 		panic(err)
 	}
 
-	if err := f.Truncate(0); err != nil {
-		panic(err)
-	}
-
-	if _, err := f.Seek(0, 0); err != nil {
-		panic(err)
-	}
-
-	for _, habit := range habits {
-		data, err := json.Marshal(habit)
-		if err != nil {
-			panic(err)
-		}
-
-		data = append(data, byte('\n'))
-		if _, err := f.Write(data); err != nil {
-			panic(err)
-		}
-	}
+	eraseAndWrite(f, &habits)
 }
 
 func (h *habit) unbreak(f *os.File) {
@@ -345,25 +255,7 @@ func (h *habit) unbreak(f *os.File) {
 		panic(err)
 	}
 
-	if err := f.Truncate(0); err != nil {
-		panic(err)
-	}
-
-	if _, err := f.Seek(0, 0); err != nil {
-		panic(err)
-	}
-
-	for _, habit := range habits {
-		data, err := json.Marshal(habit)
-		if err != nil {
-			panic(err)
-		}
-
-		data = append(data, byte('\n'))
-		if _, err := f.Write(data); err != nil {
-			panic(err)
-		}
-	}
+	eraseAndWrite(f, &habits)
 }
 
 func list(f *os.File) {
@@ -406,19 +298,30 @@ func day(f *os.File) {
 			panic(err)
 		}
 
-		deltaNowCreated := time.Now().Sub(temp.Created)
-		daysBetween := int(deltaNowCreated.Hours() / 24)
-
-		if daysBetween == 0 {
-			daysBetween = 1
+		//If today is a break day for this habit, it is not on the todo list
+		if temp.Breaks != nil {
+			lastBreak := temp.Breaks[len(temp.Breaks)-1]
+			if lastBreak.Day() != time.Now().Day() && lastBreak.Month() != time.Now().Month() && lastBreak.Year() != time.Now().Year() {
+				temp.printTodo()
+			}
+		} else {
+			temp.printTodo()
 		}
+	}
+}
 
-		expectedAtoms := temp.DailyAtoms * daysBetween
+func (h *habit) printTodo() {
+	deltaNowCreated := time.Now().Sub(h.Created)
+	daysBetween := int(deltaNowCreated.Hours() / 24)
 
-		if temp.TotalAtoms != expectedAtoms {
-			fmt.Println("[+] ", temp.Name, " x ", expectedAtoms-temp.TotalAtoms)
-		}
+	if daysBetween == 0 {
+		daysBetween = 1
+	}
 
+	expectedAtoms := h.DailyAtoms * daysBetween
+
+	if h.TotalAtoms != expectedAtoms {
+		fmt.Println("[+] ", h.Name, " x ", expectedAtoms-h.TotalAtoms)
 	}
 }
 
@@ -562,5 +465,4 @@ func main() {
 		fmt.Println("Habit updated")
 
 	}
-
 }
