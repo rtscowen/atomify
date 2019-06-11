@@ -183,7 +183,9 @@ func (h *habit) decrement(f *os.File) {
 		}
 
 		if h.Name == temp.Name {
-			temp.TotalAtoms--
+			if temp.TotalAtoms > 0 {
+				temp.TotalAtoms--
+			}
 			habits = append(habits, temp)
 		} else {
 			habits = append(habits, temp)
@@ -320,7 +322,7 @@ func (h *habit) printTodo() {
 
 	expectedAtoms := h.DailyAtoms * daysBetween
 
-	if h.TotalAtoms != expectedAtoms {
+	if h.TotalAtoms < expectedAtoms {
 		fmt.Println("[+] ", h.Name, " x ", expectedAtoms-h.TotalAtoms)
 	}
 }
@@ -450,15 +452,14 @@ func main() {
 
 		h := habit{Name: os.Args[2]}
 
-		fmt.Println(h.Name)
-
 		if newName != "" {
 			h.updateName(f, newName)
 		}
 
-		fmt.Println(h.Name)
-
 		if newDaily != 0 {
+			if !(newDaily > 0) {
+				fmt.Println("Daily expectation must be greater than 0")
+			}
 			h.updateDaily(f, newDaily)
 		}
 
