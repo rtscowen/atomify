@@ -314,13 +314,27 @@ func day(f *os.File) {
 }
 
 func (h *habit) printTodo() {
-	daysBetween := (time.Now().Day() - h.Created.Day()) + 1
+	var delta int
+	daysBetween := calendarDays(time.Now(), h.Created) + 1
 
 	expectedAtoms := h.DailyAtoms * daysBetween
+	delta = expectedAtoms - h.TotalAtoms
 
 	if h.TotalAtoms < expectedAtoms {
-		fmt.Println("[+] ", h.Name, " x ", expectedAtoms-h.TotalAtoms)
+		if delta > h.DailyAtoms {
+			delta = h.DailyAtoms
+		}
+		fmt.Println("[+] ", h.Name, " x ", delta)
 	}
+}
+
+func calendarDays(t2, t1 time.Time) int {
+	y, m, d := t2.Date()
+	u2 := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
+	y, m, d = t1.In(t2.Location()).Date()
+	u1 := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
+	days := u2.Sub(u1) / (24 * time.Hour)
+	return int(days)
 }
 
 func main() {
