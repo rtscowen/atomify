@@ -348,11 +348,11 @@ func main() {
 		return
 	}
 
-	cachedir, err := os.UserCacheDir()
+	configdir, err := os.UserConfigDir()
 	if err != nil {
 		log.Fatal(err)
 	}
-	atomifydir := filepath.Join(cachedir, "/.atomify")
+	atomifydir := filepath.Join(configdir, "/.atomify")
 
 	if _, err := os.Stat(atomifydir); os.IsNotExist(err) {
 		os.Mkdir(atomifydir, 0755)
