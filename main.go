@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -346,7 +348,17 @@ func main() {
 		return
 	}
 
-	f, err := os.OpenFile(store, os.O_CREATE|os.O_RDWR, 0644)
+	configdir, err := os.UserConfigDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	atomifydir := filepath.Join(configdir, "/.atomify")
+
+	if _, err := os.Stat(atomifydir); os.IsNotExist(err) {
+		os.Mkdir(atomifydir, 0755)
+	}
+
+	f, err := os.OpenFile(filepath.Join(atomifydir, store), os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		panic(err)
 	}
